@@ -14,11 +14,12 @@ namespace WebShop.Controllers
     public class OrderController : Controller
     {
         private ShopContext db = new ShopContext();
+        private UnitOfWork unitOfWork = new UnitOfWork();
 
         // GET: Order
         public ActionResult Index()
         {
-            var orders = db.Orders.Include(o => o.Client);
+            var orders = unitOfWork.OrderRepository.Get();
             return View(orders.ToList());
         }
 
@@ -29,7 +30,7 @@ namespace WebShop.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Order order = db.Orders.Find(id);
+            Order order = unitOfWork.OrderRepository.GetByID(id);
             if (order == null)
             {
                 return HttpNotFound();
@@ -42,13 +43,41 @@ namespace WebShop.Controllers
         {
             ViewBag.ClientID = new SelectList(db.Clients, "ID", "Name");
             ViewBag.ProductID = new SelectList(db.Products, "ID", "Name");
-            return View();
+
+            var order = unitOfWork.OrderRepository.CreateNewOrder();
+
+            return View(order);
         }
 
-        public ActionResult AddOrderItem(Order model, int index)
+        public ActionResult AddOrderItem(Order order)
         {
-            model.OrderItems.Add(new OrderItem {OrderID = 2, ProductID = 1, Stock = 1 });
-            return Json(model);
+            var products = unitOfWork.ProductRepository.Get();
+            var orderItem = new OrderItem { OrderID = order.OrderID, ProductID = products.FirstOrDefault().ID};
+            order.OrderItems.Add(orderItem);
+
+            return Json(order);
+        }
+        public ActionResult DeleteOrderItem(Order order, int index)
+        {
+            order.OrderItems.RemoveAt(index);
+
+            if (order.OrderItems.Count == 0)
+            {
+                var products = unitOfWork.ProductRepository.Get();
+                var orderItem = new OrderItem { OrderID = order.OrderID, ProductID = products.FirstOrDefault().ID };
+                order.OrderItems.Add(orderItem);
+            }
+            
+            return Json(order);
+        }
+        
+
+        public ActionResult Save(Order order)
+        {
+            unitOfWork.OrderRepository.Insert(order);
+            unitOfWork.Save();
+
+            return Json(order);
         }
 
         // POST: Order/Create
@@ -130,10 +159,7 @@ namespace WebShop.Controllers
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing)
-            {
-                db.Dispose();
-            }
+            unitOfWork.Dispose();
             base.Dispose(disposing);
         }
     }

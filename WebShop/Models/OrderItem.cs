@@ -12,7 +12,6 @@ namespace WebShop.Models
         public int ProductID { get; set; }
         public int Stock { get; set; }
 
-        public virtual Order Order { get; set; }
         public virtual Product Product { get; set; }
     }
 }

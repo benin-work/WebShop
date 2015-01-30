@@ -11,6 +11,6 @@ namespace WebShop.Models
         public int ClientID { get; set; }
 
         public virtual Client Client { get; set; }
-        public virtual ICollection<OrderItem> OrderItems { get; set; }
+        public virtual IList<OrderItem> OrderItems { get; set; }
     }
 }
