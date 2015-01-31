@@ -68,8 +68,8 @@
                 You have asked for @ko.Html.Span(m => (m.OrderItems == null) ? 0 : m.OrderItems.Count) products
             </div>
             <div class="col-md-offset-2 col-md-10">
-                @ko.Html.Button("Create", "Save", "Order", null, new { @class = "btn btn-default", @type = "submit", @formaction = "Index" })
-                @*<input @ko.Bind.Enable(m => m.OrderItems != null && m.OrderItems.Count > 0) value="Create" type="submit" class="btn btn-default">*@
+                @*@ko.Html.Button("Create", "Save", "Order", null, new { @class = "btn btn-default", @type = "submit", @formaction = "Index" })*@
+                <input value = "Create" type = "submit" class = "btn btn-default">
             </div>
         </div>
     </div>
@@ -83,6 +83,13 @@
 {
     @Scripts.Render("~/bundles/jqueryval")
     @Scripts.Render("~/bundles/knockout")
+
+    <script type="text/javascript">
+        function saveAndSubmit() {
+            @ko.ServerAction("Save", "Order")
+        }
+        $("addorder").validate();
+    </script>
 
     @ko.Apply(Model)
 }

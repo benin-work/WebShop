@@ -18,14 +18,21 @@ namespace WebShop.DAL
         public Order CreateNewOrder()
         {
             int clientId = context.Clients.FirstOrDefault().ID;
-            int productId = context.Clients.FirstOrDefault().ID;
-
             var order = new Order { ClientID = clientId };
+            
             order.OrderItems = new List<OrderItem> { 
-                new OrderItem{ProductID = productId}
+                CreateNewOrderItem()
             };
 
             return order;
+        }
+
+        public OrderItem CreateNewOrderItem()
+        {
+            int productId = context.Products.FirstOrDefault(p => p.Stock > 0).ID;
+            var orderItem = new OrderItem { ProductID = productId };
+
+            return orderItem;
         }
     }
 }

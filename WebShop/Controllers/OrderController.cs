@@ -13,7 +13,6 @@ namespace WebShop.Controllers
 {
     public class OrderController : Controller
     {
-        private ShopContext db = new ShopContext();
         private UnitOfWork unitOfWork = new UnitOfWork();
 
         // GET: Order
@@ -41,8 +40,8 @@ namespace WebShop.Controllers
         // GET: Order/Create
         public ActionResult Create()
         {
-            ViewBag.ClientID = new SelectList(db.Clients, "ID", "Name");
-            ViewBag.ProductID = new SelectList(db.Products, "ID", "Name");
+            ViewBag.ClientID = new SelectList(unitOfWork.ClientRepository.Get(), "ID", "Name");
+            ViewBag.ProductID = new SelectList(unitOfWork.ProductRepository.Get(), "ID", "Name");
 
             var order = unitOfWork.OrderRepository.CreateNewOrder();
 
@@ -51,9 +50,7 @@ namespace WebShop.Controllers
 
         public ActionResult AddOrderItem(Order order)
         {
-            var products = unitOfWork.ProductRepository.Get();
-            var orderItem = new OrderItem { OrderID = order.OrderID, ProductID = products.FirstOrDefault().ID};
-            order.OrderItems.Add(orderItem);
+            order.OrderItems.Add(unitOfWork.OrderRepository.CreateNewOrderItem());
 
             return Json(order);
         }
@@ -63,9 +60,7 @@ namespace WebShop.Controllers
 
             if (order.OrderItems.Count == 0)
             {
-                var products = unitOfWork.ProductRepository.Get();
-                var orderItem = new OrderItem { OrderID = order.OrderID, ProductID = products.FirstOrDefault().ID };
-                order.OrderItems.Add(orderItem);
+                order.OrderItems.Add(unitOfWork.OrderRepository.CreateNewOrderItem());
             }
             
             return Json(order);
@@ -89,12 +84,12 @@ namespace WebShop.Controllers
         {
             if (ModelState.IsValid)
             {
-                db.Orders.Add(order);
-                db.SaveChanges();
+                unitOfWork.OrderRepository.Insert(order);
+                unitOfWork.Save();
                 return RedirectToAction("Index");
             }
 
-            ViewBag.ClientID = new SelectList(db.Clients, "ID", "Name", order.ClientID);
+            ViewBag.ClientID = new SelectList(unitOfWork.ClientRepository.Get(), "ID", "Name", order.ClientID);
             return View(order);
         }
 
@@ -105,12 +100,12 @@ namespace WebShop.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Order order = db.Orders.Find(id);
+            Order order = unitOfWork.OrderRepository.GetByID(id);
             if (order == null)
             {
                 return HttpNotFound();
             }
-            ViewBag.ClientID = new SelectList(db.Clients, "ID", "Name", order.ClientID);
+            ViewBag.ClientID = new SelectList(unitOfWork.ClientRepository.Get(), "ID", "Name", order.ClientID);
             return View(order);
         }
 
@@ -121,14 +116,15 @@ namespace WebShop.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Edit([Bind(Include = "OrderID,ClientID")] Order order)
         {
-            if (ModelState.IsValid)
-            {
-                db.Entry(order).State = EntityState.Modified;
-                db.SaveChanges();
-                return RedirectToAction("Index");
-            }
-            ViewBag.ClientID = new SelectList(db.Clients, "ID", "Name", order.ClientID);
-            return View(order);
+            return new HttpStatusCodeResult(HttpStatusCode.MethodNotAllowed);
+            //if (ModelState.IsValid)
+            //{
+            //    db.Entry(order).State = EntityState.Modified;
+            //    db.SaveChanges();
+            //    return RedirectToAction("Index");
+            //}
+            //ViewBag.ClientID = new SelectList(db.Clients, "ID", "Name", order.ClientID);
+            //return View(order);
         }
 
         // GET: Order/Delete/5
@@ -138,7 +134,7 @@ namespace WebShop.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Order order = db.Orders.Find(id);
+            Order order = unitOfWork.OrderRepository.GetByID(id);
             if (order == null)
             {
                 return HttpNotFound();
@@ -151,9 +147,13 @@ namespace WebShop.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(int id)
         {
-            Order order = db.Orders.Find(id);
-            db.Orders.Remove(order);
-            db.SaveChanges();
+            Order order = unitOfWork.OrderRepository.GetByID(id);
+            if (order == null)
+            {
+                return HttpNotFound();
+            }
+            unitOfWork.OrderRepository.Delete(order);
+            unitOfWork.Save();
             return RedirectToAction("Index");
         }
 
