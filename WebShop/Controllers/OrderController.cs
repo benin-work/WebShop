@@ -6,14 +6,38 @@ using System.Linq;
 using System.Net;
 using System.Web;
 using System.Web.Mvc;
+
 using WebShop.DAL;
 using WebShop.Models;
+using WebShop.ViewModels;
+
 
 namespace WebShop.Controllers
 {
     public class OrderController : Controller
     {
         private UnitOfWork unitOfWork = new UnitOfWork();
+
+        #region Model ViewModel Mapping
+        private OrderViewModel ViewModelFromOrder(Order order)
+        {
+            var viewModel = new OrderViewModel()
+            {
+                OrderID = order.OrderID,
+                Client = order.Client,
+                OrderItems = order.OrderItems
+            };
+            return viewModel;
+        }
+
+        private void UpdateOrder(Order order, OrderViewModel viewModel)
+        {
+            order.OrderID = viewModel.OrderID;
+            order.Client = viewModel.Client;
+            order.ClientID = viewModel.ClientID;
+            order.OrderItems = viewModel.OrderItems;
+        }
+        #endregion
 
         // GET: Order
         public ActionResult Index()
@@ -22,6 +46,56 @@ namespace WebShop.Controllers
             return View(orders.ToList());
         }
 
+        // GET: Order/Create
+        public ActionResult Create()
+        {
+            ViewBag.ClientID = new SelectList(unitOfWork.ClientRepository.Get(), "ID", "Name");
+            ViewBag.ProductID = new SelectList(unitOfWork.ProductRepository.Get(), "ID", "Name");
+
+            var order = unitOfWork.OrderRepository.CreateNewOrder();
+            var viewModel = ViewModelFromOrder(order);
+
+            var clientList = (SelectList)ViewBag.ClientID;
+            viewModel.ClientDropDown = clientList.ToList();
+
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        public ActionResult AddOrderItem(OrderViewModel viewModel)
+        {
+            viewModel.OrderItems.Add(unitOfWork.OrderRepository.CreateNewOrderItem());
+
+            return Json(viewModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult DeleteOrderItem(OrderViewModel viewModel, int index)
+        {
+            viewModel.OrderItems.RemoveAt(index);
+
+            if (viewModel.OrderItems.Count == 0)
+            {
+                viewModel.OrderItems.Add(unitOfWork.OrderRepository.CreateNewOrderItem());
+            }
+
+            return Json(viewModel);
+        }
+
+        public ActionResult Save(OrderViewModel viewModel)
+        {
+            var order = unitOfWork.OrderRepository.CreateNewOrder();
+            UpdateOrder(order, viewModel);
+
+            unitOfWork.OrderRepository.Insert(order);
+            unitOfWork.Save();
+
+            //return Json(viewModel);
+            return Redirect("~/");
+        }
+
+        #region BASIC OPERATION
         // GET: Order/Details/5
         public ActionResult Details(int? id)
         {
@@ -35,44 +109,6 @@ namespace WebShop.Controllers
                 return HttpNotFound();
             }
             return View(order);
-        }
-
-        // GET: Order/Create
-        public ActionResult Create()
-        {
-            ViewBag.ClientID = new SelectList(unitOfWork.ClientRepository.Get(), "ID", "Name");
-            ViewBag.ProductID = new SelectList(unitOfWork.ProductRepository.Get(), "ID", "Name");
-
-            var order = unitOfWork.OrderRepository.CreateNewOrder();
-
-            return View(order);
-        }
-
-        public ActionResult AddOrderItem(Order order)
-        {
-            order.OrderItems.Add(unitOfWork.OrderRepository.CreateNewOrderItem());
-
-            return Json(order);
-        }
-        public ActionResult DeleteOrderItem(Order order, int index)
-        {
-            order.OrderItems.RemoveAt(index);
-
-            if (order.OrderItems.Count == 0)
-            {
-                order.OrderItems.Add(unitOfWork.OrderRepository.CreateNewOrderItem());
-            }
-            
-            return Json(order);
-        }
-        
-
-        public ActionResult Save(Order order)
-        {
-            unitOfWork.OrderRepository.Insert(order);
-            unitOfWork.Save();
-
-            return Json(order);
         }
 
         // POST: Order/Create
@@ -156,6 +192,7 @@ namespace WebShop.Controllers
             unitOfWork.Save();
             return RedirectToAction("Index");
         }
+        #endregion
 
         protected override void Dispose(bool disposing)
         {
