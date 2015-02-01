@@ -58,11 +58,27 @@
                 You have asked for @ko.Html.Span(m => (m.OrderItems == null) ? 0 : m.OrderItems.Count) products
             </div>
             <div class="col-md-offset-2 col-md-10">
-                @ko.Html.Button("Save", "Save", "Order", null, new { @class = "btn btn-default" })
-                <input value="Create" type="submit" class="btn btn-default">
+                @*@ko.Html.Button("Save", "Save", "Order", null, new { @class = "btn btn-default" })*@
+                <input value="@ViewBag.SaveButton" data-bind="click: WebShopNamespace.saveOrder" type="button" class="btn btn-default">
             </div>
         </div>
     </div>
 }
+
+<script type="text/javascript">
+    var WebShopNamespace = {};
+
+    WebShopNamespace.saveOrder = function () {
+        $.ajax({
+            url: "@Url.Action("Save", "Order")",
+            type: 'POST',
+            data: ko.toJSON(this),
+            contentType: 'application/json'
+        }).done(function (data) {
+            window.location = "@Url.Action("Index", "Order")";
+        }).fail(function (data) {
+        });
+    }
+</script>
 
 @ko.Apply(Model)
