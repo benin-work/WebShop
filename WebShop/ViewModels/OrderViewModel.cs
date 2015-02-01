@@ -13,6 +13,9 @@ namespace WebShop.ViewModels
     public class OrderViewModel
     {
         [Required]
+        public int OrderID { get; set; }
+
+        [Required]
         public int ClientID { get; set; }
 
         public IList<OrderItem> OrderItems { get; set; }

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Web;
 using System.Web.Mvc;
+
 using WebShop.DAL;
 using WebShop.Models;
 
@@ -13,30 +14,16 @@ namespace WebShop.Controllers
 {
     public class ClientController : Controller
     {
-        private ShopContext db = new ShopContext();
+        private UnitOfWork unitOfWork = new UnitOfWork();
 
         // GET: Client
         public ActionResult Index()
         {
-            return View(db.Clients.ToList());
+            return View(unitOfWork.ClientRepository.Get());
         }
 
-        // GET: Client/Details/5
-        public ActionResult Details(int? id)
-        {
-            if (id == null)
-            {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
-            }
-            Client client = db.Clients.Find(id);
-            if (client == null)
-            {
-                return HttpNotFound();
-            }
-            return View(client);
-        }
 
-        // GET: Client/Create
+        [HttpGet]
         public ActionResult Create()
         {
             return View();
@@ -51,22 +38,22 @@ namespace WebShop.Controllers
         {
             if (ModelState.IsValid)
             {
-                db.Clients.Add(client);
-                db.SaveChanges();
+                unitOfWork.ClientRepository.Insert(client);
+                unitOfWork.Save();
                 return RedirectToAction("Index");
             }
 
             return View(client);
         }
 
-        // GET: Client/Edit/5
+        [HttpGet]
         public ActionResult Edit(int? id)
         {
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Client client = db.Clients.Find(id);
+            Client client = unitOfWork.ClientRepository.GetByID(id);
             if (client == null)
             {
                 return HttpNotFound();
@@ -74,7 +61,6 @@ namespace WebShop.Controllers
             return View(client);
         }
 
-        // POST: Client/Edit/5
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
@@ -83,8 +69,8 @@ namespace WebShop.Controllers
         {
             if (ModelState.IsValid)
             {
-                db.Entry(client).State = EntityState.Modified;
-                db.SaveChanges();
+                unitOfWork.ClientRepository.Update(client);
+                unitOfWork.Save();
                 return RedirectToAction("Index");
             }
             return View(client);
@@ -97,7 +83,7 @@ namespace WebShop.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Client client = db.Clients.Find(id);
+            Client client = unitOfWork.ClientRepository.GetByID(id);
             if (client == null)
             {
                 return HttpNotFound();
@@ -110,9 +96,9 @@ namespace WebShop.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(int id)
         {
-            Client client = db.Clients.Find(id);
-            db.Clients.Remove(client);
-            db.SaveChanges();
+            Client client = unitOfWork.ClientRepository.GetByID(id);
+            unitOfWork.ClientRepository.Delete(client);
+            unitOfWork.Save();
             return RedirectToAction("Index");
         }
 
@@ -120,7 +106,7 @@ namespace WebShop.Controllers
         {
             if (disposing)
             {
-                db.Dispose();
+                unitOfWork.Dispose();
             }
             base.Dispose(disposing);
         }

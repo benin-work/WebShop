@@ -10,7 +10,7 @@ namespace WebShop.Models
         public int OrderItemID { get; set; }
         public int OrderID { get; set; }
         public int ProductID { get; set; }
-        public int Stock { get; set; }
+        public int Qty { get; set; }
 
         public virtual Product Product { get; set; }
     }

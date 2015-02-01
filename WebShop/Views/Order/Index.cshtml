@@ -26,7 +26,6 @@
         <td></td>
         <td>
             @Html.ActionLink("Edit", "Edit", new { id=item.OrderID }) |
-            @Html.ActionLink("Details", "Details", new { id=item.OrderID }) |
             @Html.ActionLink("Delete", "Delete", new { id=item.OrderID })
         </td>
     </tr>
@@ -41,7 +40,7 @@
                             @Html.DisplayFor(modelItem => order_item.Product.Name)
                         </td>
                         <td>
-                            @Html.DisplayFor(modelItem => order_item.Stock)
+                            @Html.DisplayFor(modelItem => order_item.Qty)
                         </td>
                         <td>
                         </td>

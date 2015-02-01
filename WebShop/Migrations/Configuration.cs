@@ -1,25 +1,30 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Entity;
-using System.Linq;
-using System.Web;
-
-using WebShop.Models;
-
-namespace WebShop.DAL
+namespace WebShop.Migrations
 {
-    public class ShopInitializer : DropCreateDatabaseIfModelChanges<ShopContext>
+    using System;
+    using System.Collections.Generic;
+    using System.Data.Entity;
+    using System.Data.Entity.Migrations;
+    using System.Linq;
+
+    using WebShop.Models;
+
+    internal sealed class Configuration : DbMigrationsConfiguration<WebShop.DAL.ShopContext>
     {
-        protected override void Seed(ShopContext context)
+        public Configuration()
         {
-            var clients = new List<Client>
+            AutomaticMigrationsEnabled = false;
+        }
+
+        protected override void Seed(WebShop.DAL.ShopContext context)
+        {
+             var clients = new List<Client>
             {
                 new Client{Name = "Carson", Address="USA, California", Telephone = "+12000999"},
                 new Client{Name = "John", Address="RF, Moscow", Telephone = "+79666666"},
                 new Client{Name = "Vasily", Address="UA, Lviv", Telephone = "+3804567890"}                
             };
 
-            clients.ForEach(s => context.Clients.Add(s));
+            clients.ForEach(c => context.Clients.AddOrUpdate(c));
             context.SaveChanges();
 
             var products = new List<Product>
@@ -29,7 +34,7 @@ namespace WebShop.DAL
                 new Product{Name = "Sand", Weight=10.0, Stock = 200}            
             };
 
-            products.ForEach(s => context.Products.Add(s));
+            products.ForEach(p => context.Products.AddOrUpdate(p));
             context.SaveChanges();
         }
     }

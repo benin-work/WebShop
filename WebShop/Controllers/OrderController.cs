@@ -11,7 +11,6 @@ using WebShop.DAL;
 using WebShop.Models;
 using WebShop.ViewModels;
 
-
 namespace WebShop.Controllers
 {
     public class OrderController : Controller
@@ -23,6 +22,7 @@ namespace WebShop.Controllers
         {
             var viewModel = new OrderViewModel()
             {
+                OrderID = order.OrderID,
                 ClientID = order.ClientID,
                 OrderItems = order.OrderItems
             };
@@ -31,8 +31,21 @@ namespace WebShop.Controllers
 
         private void UpdateOrder(Order order, OrderViewModel viewModel)
         {
+            order.OrderID = viewModel.OrderID;
             order.ClientID = viewModel.ClientID;
             order.OrderItems = viewModel.OrderItems;
+        }
+        #endregion
+
+        #region DropDown lists helpers
+        private SelectList PopulateClientList()
+        {
+            return new SelectList(unitOfWork.ClientRepository.Get(), "ID", "Name");
+        }
+
+        private SelectList PopulateProductList()
+        {
+            return new SelectList(unitOfWork.ProductRepository.Get(), "ID", "Name");
         }
         #endregion
 
@@ -46,13 +59,12 @@ namespace WebShop.Controllers
         // GET: Order/Create
         public ActionResult Create()
         {
-            ViewBag.ClientID = new SelectList(unitOfWork.ClientRepository.Get(), "ID", "Name");
-            ViewBag.ProductID = new SelectList(unitOfWork.ProductRepository.Get(), "ID", "Name");
+            ViewBag.ClientID = PopulateClientList();
+            ViewBag.ProductID = PopulateProductList();
 
             var order = unitOfWork.OrderRepository.CreateNewOrder();
-            var viewModel = ViewModelFromOrder(order);
 
-            return View(viewModel);
+            return View(ViewModelFromOrder(order));
         }
 
         [HttpPost]
@@ -76,53 +88,37 @@ namespace WebShop.Controllers
             return Json(viewModel);
         }
 
+        [HttpPost]
         public ActionResult Save(OrderViewModel viewModel)
         {
-            var order = unitOfWork.OrderRepository.CreateNewOrder();
-            UpdateOrder(order, viewModel);
+            if (viewModel.OrderID == 0)
+            {
+                // Insert new Order
+                var order = unitOfWork.OrderRepository.CreateNewOrder();
+                UpdateOrder(order, viewModel);
 
-            unitOfWork.OrderRepository.Insert(order);
-            unitOfWork.Save();
+                unitOfWork.OrderRepository.Insert(order);
+                unitOfWork.Save();
+            }
+            else 
+            {
+                Order order = unitOfWork.OrderRepository.GetByID(viewModel.OrderID);
+                if (order == null)
+                {
+                    return HttpNotFound();
+                }
+
+                UpdateOrder(order, viewModel);
+                unitOfWork.OrderRepository.Update(order);
+                unitOfWork.Save();
+            }
 
             //return Json(viewModel);
             return Redirect("~/");
         }
 
-        #region BASIC OPERATION
-        // GET: Order/Details/5
-        public ActionResult Details(int? id)
-        {
-            if (id == null)
-            {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
-            }
-            Order order = unitOfWork.OrderRepository.GetByID(id);
-            if (order == null)
-            {
-                return HttpNotFound();
-            }
-            return View(order);
-        }
-
-        // POST: Order/Create
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "OrderID,ClientID")] Order order)
-        {
-            if (ModelState.IsValid)
-            {
-                unitOfWork.OrderRepository.Insert(order);
-                unitOfWork.Save();
-                return RedirectToAction("Index");
-            }
-
-            ViewBag.ClientID = new SelectList(unitOfWork.ClientRepository.Get(), "ID", "Name", order.ClientID);
-            return View(order);
-        }
-
         // GET: Order/Edit/5
+        [HttpGet]
         public ActionResult Edit(int? id)
         {
             if (id == null)
@@ -134,8 +130,11 @@ namespace WebShop.Controllers
             {
                 return HttpNotFound();
             }
-            ViewBag.ClientID = new SelectList(unitOfWork.ClientRepository.Get(), "ID", "Name", order.ClientID);
-            return View(order);
+
+            ViewBag.ClientID = PopulateClientList();
+            ViewBag.ProductID = PopulateProductList();
+
+            return View(ViewModelFromOrder(order));
         }
 
         // POST: Order/Edit/5
@@ -154,6 +153,24 @@ namespace WebShop.Controllers
             //}
             //ViewBag.ClientID = new SelectList(db.Clients, "ID", "Name", order.ClientID);
             //return View(order);
+        }
+
+        #region BASIC OPERATION
+        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
+        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Create([Bind(Include = "OrderID,ClientID")] Order order)
+        {
+            if (ModelState.IsValid)
+            {
+                unitOfWork.OrderRepository.Insert(order);
+                unitOfWork.Save();
+                return RedirectToAction("Index");
+            }
+
+            ViewBag.ClientID = new SelectList(unitOfWork.ClientRepository.Get(), "ID", "Name", order.ClientID);
+            return View(order);
         }
 
         // GET: Order/Delete/5

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Web;
 using System.Web.Mvc;
+
 using WebShop.DAL;
 using WebShop.Models;
 
@@ -13,27 +14,12 @@ namespace WebShop.Controllers
 {
     public class ProductController : Controller
     {
-        private ShopContext db = new ShopContext();
+        private UnitOfWork unitOfWork = new UnitOfWork();
 
         // GET: Product
         public ActionResult Index()
         {
-            return View(db.Products.ToList());
-        }
-
-        // GET: Product/Details/5
-        public ActionResult Details(int? id)
-        {
-            if (id == null)
-            {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
-            }
-            Product product = db.Products.Find(id);
-            if (product == null)
-            {
-                return HttpNotFound();
-            }
-            return View(product);
+            return View(unitOfWork.ProductRepository.Get());
         }
 
         // GET: Product/Create
@@ -51,8 +37,8 @@ namespace WebShop.Controllers
         {
             if (ModelState.IsValid)
             {
-                db.Products.Add(product);
-                db.SaveChanges();
+                unitOfWork.ProductRepository.Insert(product);
+                unitOfWork.Save();
                 return RedirectToAction("Index");
             }
 
@@ -66,7 +52,7 @@ namespace WebShop.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Product product = db.Products.Find(id);
+            Product product = unitOfWork.ProductRepository.GetByID(id);
             if (product == null)
             {
                 return HttpNotFound();
@@ -83,8 +69,8 @@ namespace WebShop.Controllers
         {
             if (ModelState.IsValid)
             {
-                db.Entry(product).State = EntityState.Modified;
-                db.SaveChanges();
+                unitOfWork.ProductRepository.Update(product);
+                unitOfWork.Save();
                 return RedirectToAction("Index");
             }
             return View(product);
@@ -97,7 +83,7 @@ namespace WebShop.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Product product = db.Products.Find(id);
+            Product product = unitOfWork.ProductRepository.GetByID(id);
             if (product == null)
             {
                 return HttpNotFound();
@@ -110,9 +96,9 @@ namespace WebShop.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(int id)
         {
-            Product product = db.Products.Find(id);
-            db.Products.Remove(product);
-            db.SaveChanges();
+            Product product = unitOfWork.ProductRepository.GetByID(id);
+            unitOfWork.ProductRepository.Delete(id);
+            unitOfWork.Save();
             return RedirectToAction("Index");
         }
 
@@ -120,7 +106,7 @@ namespace WebShop.Controllers
         {
             if (disposing)
             {
-                db.Dispose();
+                unitOfWork.Dispose();
             }
             base.Dispose(disposing);
         }
