@@ -6,6 +6,11 @@ using System.Web.Mvc;
 using System.Web.Optimization;
 using System.Web.Routing;
 
+using AutoMapper;
+
+using WebShop.Models;
+using WebShop.ViewModels;
+
 namespace WebShop
 {
     public class MvcApplication : System.Web.HttpApplication
@@ -19,6 +24,10 @@ namespace WebShop
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
+
+            // Mapping the model types
+            Mapper.CreateMap<Order, OrderViewModel>();
+            Mapper.CreateMap<OrderViewModel, Order>();
         }
     }
 }

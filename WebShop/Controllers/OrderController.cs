@@ -7,6 +7,8 @@ using System.Net;
 using System.Web;
 using System.Web.Mvc;
 
+using AutoMapper;
+
 using WebShop.DAL;
 using WebShop.Models;
 using WebShop.ViewModels;
@@ -20,20 +22,12 @@ namespace WebShop.Controllers
         #region Model ViewModel Mapping
         private OrderViewModel ViewModelFromOrder(Order order)
         {
-            var viewModel = new OrderViewModel()
-            {
-                OrderID = order.OrderID,
-                ClientID = order.ClientID,
-                OrderItems = order.OrderItems
-            };
-            return viewModel;
+            return Mapper.Map<Order, OrderViewModel>(order);
         }
 
-        private void UpdateOrder(Order order, OrderViewModel viewModel)
+        private Order OrderFromViewModel(OrderViewModel viewModel)
         {
-            order.OrderID = viewModel.OrderID;
-            order.ClientID = viewModel.ClientID;
-            order.OrderItems = viewModel.OrderItems;
+            return Mapper.Map<OrderViewModel, Order>(viewModel);
         }
         #endregion
 
@@ -94,8 +88,7 @@ namespace WebShop.Controllers
             if (viewModel.OrderID == 0)
             {
                 // Insert new Order
-                var order = unitOfWork.OrderRepository.CreateNewOrder();
-                UpdateOrder(order, viewModel);
+                var order = OrderFromViewModel(viewModel);
 
                 unitOfWork.OrderRepository.Insert(order);
                 unitOfWork.Save();
@@ -108,7 +101,8 @@ namespace WebShop.Controllers
                     return HttpNotFound();
                 }
 
-                UpdateOrder(order, viewModel);
+                //UpdateOrder(order, viewModel);
+                order = OrderFromViewModel(viewModel);
                 unitOfWork.OrderRepository.Update(order);
                 unitOfWork.Save();
             }
@@ -135,24 +129,6 @@ namespace WebShop.Controllers
             ViewBag.ProductID = PopulateProductList();
 
             return View(ViewModelFromOrder(order));
-        }
-
-        // POST: Order/Edit/5
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "OrderID,ClientID")] Order order)
-        {
-            return new HttpStatusCodeResult(HttpStatusCode.MethodNotAllowed);
-            //if (ModelState.IsValid)
-            //{
-            //    db.Entry(order).State = EntityState.Modified;
-            //    db.SaveChanges();
-            //    return RedirectToAction("Index");
-            //}
-            //ViewBag.ClientID = new SelectList(db.Clients, "ID", "Name", order.ClientID);
-            //return View(order);
         }
 
         #region BASIC OPERATION
