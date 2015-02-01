@@ -30,7 +30,7 @@ namespace WebShop.DAL
         public OrderItem CreateNewOrderItem()
         {
             int productId = context.Products.FirstOrDefault(p => p.Stock > 0).ID;
-            var orderItem = new OrderItem { ProductID = productId };
+            var orderItem = new OrderItem { ProductID = productId, Qty = 1 };
 
             return orderItem;
         }

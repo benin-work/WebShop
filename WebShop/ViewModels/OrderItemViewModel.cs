@@ -3,22 +3,21 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Web;
-using System.Web.Mvc;
-
-using WebShop.Models;
-using WebShop.DAL;
 
 namespace WebShop.ViewModels
 {
-    public class OrderViewModel
+    public class OrderItemViewModel
     {
+        public int OrderItemID { get; set; }
+        
         [Required]
         public int OrderID { get; set; }
-
+        
         [Required]
-        public int ClientID { get; set; }
+        public int ProductID { get; set; }
+        
+        [Required]
+        public int Qty { get; set; }
 
-        public IList<OrderItemViewModel> OrderItems { get; set; }
-
-    }
+     }
 }

@@ -1,11 +1,10 @@
 ﻿@model IEnumerable<WebShop.Models.Order>
 
 @{
-    ViewBag.Title = "Index";
+    ViewBag.Title = "Order List";
 }
 
-<h2>Index</h2>
-
+<h2>@ViewBag.Title</h2>
 <p>
     @Html.ActionLink("Create New", "Create")
 </p>
@@ -25,7 +24,8 @@
         </td>
         <td></td>
         <td>
-            @Html.ActionLink("Edit", "Edit", new { id=item.OrderID }) |
+            @Html.ActionLink("Details", "Details", new { id=item.OrderID }) |
+            @Html.ActionLink("Edit", "Edit", new { id = item.OrderID }) |
             @Html.ActionLink("Delete", "Delete", new { id=item.OrderID })
         </td>
     </tr>

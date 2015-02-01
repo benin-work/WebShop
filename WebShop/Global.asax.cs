@@ -28,6 +28,9 @@ namespace WebShop
             // Mapping the model types
             Mapper.CreateMap<Order, OrderViewModel>();
             Mapper.CreateMap<OrderViewModel, Order>();
+
+            Mapper.CreateMap<OrderItemViewModel, OrderItem>();
+            Mapper.CreateMap<OrderItem, OrderItemViewModel>();
         }
     }
 }

@@ -12,6 +12,7 @@ namespace WebShop.DAL
         private ShopContext context = new ShopContext();
         private GenericShopRepository<Client> clientRepository;
         private GenericShopRepository<Product> productRepository;
+        private GenericShopRepository<OrderItem> orderItemsRepository;
         private OrderRepository orderRepository;
 
         public GenericShopRepository<Client> ClientRepository
@@ -37,6 +38,19 @@ namespace WebShop.DAL
                 return productRepository;
             }
         }
+
+        public GenericShopRepository<OrderItem> OrderItemRepository
+        {
+            get
+            {
+                if (this.orderItemsRepository == null)
+                {
+                    this.orderItemsRepository = new GenericShopRepository<OrderItem>(context);
+                }
+                return orderItemsRepository;
+            }
+        }
+        
 
         public OrderRepository OrderRepository
         {

@@ -25,9 +25,50 @@ namespace WebShop.Controllers
             return Mapper.Map<Order, OrderViewModel>(order);
         }
 
-        private Order OrderFromViewModel(OrderViewModel viewModel)
+        private void UpdateOrderFromViewModel(OrderViewModel viewModel, Order order)
         {
-            return Mapper.Map<OrderViewModel, Order>(viewModel);
+            Mapper.CreateMap<OrderItemViewModel, OrderItem>()
+            .ConstructUsing((OrderItemViewModel itemVM) =>
+            {
+                if (itemVM.OrderItemID == 0)
+                {
+                    return unitOfWork.OrderRepository.CreateNewOrderItem();
+                }
+                return unitOfWork.OrderItemRepository.GetByID(itemVM.OrderItemID);
+            });
+
+            Mapper.CreateMap<OrderViewModel, Order>()
+            .ConstructUsing((OrderViewModel orderVM) =>
+            {
+                if (orderVM.OrderID == 0)
+                {
+                    return unitOfWork.OrderRepository.CreateNewOrder();
+                }
+                return unitOfWork.OrderRepository.GetByID(orderVM.OrderID);
+            });
+
+            // It works only 
+            //find out what details no longer exist in the 
+            //DTO and delete the corresponding entities 
+            //.BeforeMap((dto, o) =>
+            //{
+            //    o
+            //    .OrderItems
+            //    .Where(d => !dto.OrderItems.Any(ddto => ddto.OrderItemID == d.OrderItemID))
+            //    .ToList()
+            //    .ForEach(deleted =>
+            //        {
+            //            unitOfWork.OrderItemRepository.Delete(deleted);
+            //        });
+            //});
+
+            // Find out what items no longer exist in the model and delete them
+            order.OrderItems.Where(d =>
+                !viewModel.OrderItems.Any(o => o.OrderItemID == d.OrderItemID))
+                .ToList()
+                .ForEach(deleted => unitOfWork.OrderItemRepository.Delete(deleted));
+
+            Mapper.Map(viewModel, order);
         }
         #endregion
 
@@ -64,7 +105,9 @@ namespace WebShop.Controllers
         [HttpPost]
         public ActionResult AddOrderItem(OrderViewModel viewModel)
         {
-            viewModel.OrderItems.Add(unitOfWork.OrderRepository.CreateNewOrderItem());
+            var item = unitOfWork.OrderRepository.CreateNewOrderItem();
+            OrderItemViewModel itemVM = Mapper.Map<OrderItem, OrderItemViewModel>(item);
+            viewModel.OrderItems.Add(itemVM);
 
             return Json(viewModel);
         }
@@ -76,7 +119,9 @@ namespace WebShop.Controllers
 
             if (viewModel.OrderItems.Count == 0)
             {
-                viewModel.OrderItems.Add(unitOfWork.OrderRepository.CreateNewOrderItem());
+                var item = unitOfWork.OrderRepository.CreateNewOrderItem();
+                OrderItemViewModel itemVM = Mapper.Map<OrderItem, OrderItemViewModel>(item);
+                viewModel.OrderItems.Add(itemVM);
             }
 
             return Json(viewModel);
@@ -88,7 +133,8 @@ namespace WebShop.Controllers
             if (viewModel.OrderID == 0)
             {
                 // Insert new Order
-                var order = OrderFromViewModel(viewModel);
+                var order = unitOfWork.OrderRepository.CreateNewOrder();
+                UpdateOrderFromViewModel(viewModel, order);
 
                 unitOfWork.OrderRepository.Insert(order);
                 unitOfWork.Save();
@@ -102,7 +148,7 @@ namespace WebShop.Controllers
                 }
 
                 //UpdateOrder(order, viewModel);
-                order = OrderFromViewModel(viewModel);
+                UpdateOrderFromViewModel(viewModel, order);
                 unitOfWork.OrderRepository.Update(order);
                 unitOfWork.Save();
             }
@@ -146,6 +192,21 @@ namespace WebShop.Controllers
             }
 
             ViewBag.ClientID = new SelectList(unitOfWork.ClientRepository.Get(), "ID", "Name", order.ClientID);
+            return View(order);
+        }
+
+        [HttpGet]
+        public ActionResult Details(int? id)
+        {
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+            Order order = unitOfWork.OrderRepository.GetByID(id);
+            if (order == null)
+            {
+                return HttpNotFound();
+            }
             return View(order);
         }
 
