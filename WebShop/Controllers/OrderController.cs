@@ -23,8 +23,7 @@ namespace WebShop.Controllers
         {
             var viewModel = new OrderViewModel()
             {
-                OrderID = order.OrderID,
-                Client = order.Client,
+                ClientID = order.ClientID,
                 OrderItems = order.OrderItems
             };
             return viewModel;
@@ -32,8 +31,6 @@ namespace WebShop.Controllers
 
         private void UpdateOrder(Order order, OrderViewModel viewModel)
         {
-            order.OrderID = viewModel.OrderID;
-            order.Client = viewModel.Client;
             order.ClientID = viewModel.ClientID;
             order.OrderItems = viewModel.OrderItems;
         }
@@ -55,9 +52,6 @@ namespace WebShop.Controllers
             var order = unitOfWork.OrderRepository.CreateNewOrder();
             var viewModel = ViewModelFromOrder(order);
 
-            var clientList = (SelectList)ViewBag.ClientID;
-            viewModel.ClientDropDown = clientList.ToList();
-
             return View(viewModel);
         }
 
@@ -70,7 +64,6 @@ namespace WebShop.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public ActionResult DeleteOrderItem(OrderViewModel viewModel, int index)
         {
             viewModel.OrderItems.RemoveAt(index);
