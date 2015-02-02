@@ -130,6 +130,42 @@ namespace WebShop.Controllers
         [HttpPost]
         public ActionResult Save(OrderViewModel viewModel)
         {
+            if (!ModelState.IsValid)
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest, "Order details error!");
+
+            // Check Stock
+            bool valid = true;
+            IDictionary<int, int> products = new Dictionary<int, int>();
+            viewModel.OrderItems.ToList().ForEach(i => 
+            {
+                if (products.ContainsKey(i.ProductID))
+                {
+                    products[i.ProductID] += i.Qty;
+                }
+                else 
+                {
+                    products[i.ProductID] = i.Qty;
+                }
+            });
+
+            string productName ="";
+            int productStock = 0;
+            foreach (var item in products)
+            {
+                var product = unitOfWork.ProductRepository.GetByID(item.Key);
+                if (item.Value > product.Stock)
+                {
+                    productName = product.Name;
+                    productStock = product.Stock;
+                    valid = false;
+                    break;
+                }
+            }
+
+            if (!valid)
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest, String.Format("Product {0} out of stock ({1})!", productName, productStock));
+            
+            // Save/Update data
             if (viewModel.OrderID == 0)
             {
                 // Insert new Order
@@ -139,7 +175,7 @@ namespace WebShop.Controllers
                 unitOfWork.OrderRepository.Insert(order);
                 unitOfWork.Save();
             }
-            else 
+            else
             {
                 Order order = unitOfWork.OrderRepository.GetByID(viewModel.OrderID);
                 if (order == null)
@@ -153,8 +189,7 @@ namespace WebShop.Controllers
                 unitOfWork.Save();
             }
 
-            //return Json(viewModel);
-            return Redirect("~/");
+            return Json(viewModel);
         }
 
         // GET: Order/Edit/5

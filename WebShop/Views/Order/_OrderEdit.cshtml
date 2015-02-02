@@ -32,6 +32,7 @@
                             <th>Product</th>
                             <th>Stock</th>
                             <th></th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -42,10 +43,13 @@
                                     @Html.DropDownList("ProductID", null, htmlAttributes: new { @class = "form-control", @data_bind = "value : $data.ProductID" })
                                 </td>
                                 <td>
-                                    <input type="number" class="form-control" min="1" max="10" @item.Bind.Value(m => m.Qty) required>
+                                    <input type="number" class="form-control" min="1" @item.Bind.Value(m => m.Qty) required>
                                 </td>
                                 <td>
                                     @ko.Html.HyperlinkButton("Delete", "DeleteOrderItem", "Order", new { index = item.GetIndex() }).Visible(m => m.OrderItems.Count > 1)
+                                </td>
+                                <td>
+                                    @Html.ValidationMessageFor(m => m.OrderItems, "", new { @class = "text-danger" })
                                 </td>
                             </tr>
                         }
@@ -58,25 +62,26 @@
                 You have asked for @ko.Html.Span(m => (m.OrderItems == null) ? 0 : m.OrderItems.Count) products
             </div>
             <div class="col-md-offset-2 col-md-10">
-                @*@ko.Html.Button("Save", "Save", "Order", null, new { @class = "btn btn-default" })*@
-                <input value="@ViewBag.SaveButton" data-bind="click: WebShopNamespace.saveOrder" type="button" class="btn btn-default">
+                <span id="errormsg" class="text-danger"></span>
+            </div>
+            <div class="col-md-offset-2 col-md-10">
+                <input value="@ViewBag.SaveButton" onclick="saveOrder()" type="button" class="btn btn-default">
             </div>
         </div>
     </div>
 }
 
 <script type="text/javascript">
-    var WebShopNamespace = {};
-
-    WebShopNamespace.saveOrder = function () {
+    saveOrder = function () {
         $.ajax({
             url: "@Url.Action("Save", "Order")",
             type: 'POST',
-            data: ko.toJSON(this),
+            data: ko.toJSON(OrderViewModel),
             contentType: 'application/json'
         }).done(function (data) {
             window.location = "@Url.Action("Index", "Order")";
         }).fail(function (data) {
+            document.getElementById("errormsg").innerHTML = data.statusText;
         });
     }
 </script>
