@@ -1,8 +1,6 @@
-﻿@using PerpetuumSoft.Knockout
-@model WebShop.Models.Order
+﻿@model WebShop.Models.Order
 @{
     ViewBag.Title = "Details";
-    var ko = Html.CreateKnockoutContext();
 }
 
 <h2>Details</h2>
@@ -52,7 +50,4 @@
 @section Scripts
 {
     @Scripts.Render("~/bundles/jqueryval")
-    @Scripts.Render("~/bundles/knockout")
-
-    @ko.Apply(Model)
 }

@@ -22,6 +22,20 @@ namespace WebShop.Controllers
             return View(unitOfWork.ClientRepository.Get());
         }
 
+        [HttpGet]
+        public ActionResult Details(int? id)
+        {
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+            Client client = unitOfWork.ClientRepository.GetByID(id);
+            if (client == null)
+            {
+                return HttpNotFound();
+            }
+            return View(client);
+        }
 
         [HttpGet]
         public ActionResult Create()
